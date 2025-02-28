@@ -36,6 +36,7 @@ Application Options:
       --elasticsearch.apikey=   ElasticSearch base64-encoded token for authorization; if set, overrides
                                 username and password [$ELASTICSEARCH_APIKEY]
       --elasticsearch.index=    ElasticSearch index name (placeholders: %y for year, %m for month and %d
+      --elasticsearch.skipSSLVerify  Skip SSL verification when connecting to ElasticSearch [$ELASTICSEARCH_SKIPSSLVERIFY]
                                 for day) (default: alertmanager-%y.%m) [$ELASTICSEARCH_INDEX]
       --bind=                   Server address (default: :9097) [$SERVER_BIND]
 

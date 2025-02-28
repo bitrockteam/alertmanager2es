@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
@@ -8,8 +9,9 @@ import (
 	"runtime"
 	"strings"
 
-	elasticsearch "github.com/elastic/go-elasticsearch/v7"
 	"github.com/jessevdk/go-flags"
+	"github.com/opensearch-project/opensearch-go/v4"
+	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 
@@ -39,13 +41,17 @@ func main() {
 	exporter := &AlertmanagerElasticsearchExporter{}
 	exporter.Init()
 
-	cfg := elasticsearch.Config{
-		Addresses: opts.Elasticsearch.Addresses,
-		Username:  opts.Elasticsearch.Username,
-		Password:  opts.Elasticsearch.Password,
-		APIKey:    opts.Elasticsearch.ApiKey,
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
+	cfg := opensearchapi.Config{
+		Client: opensearch.Config{
+			Addresses: opts.Elasticsearch.Addresses,
+			Username:  opts.Elasticsearch.Username,
+			Password:  opts.Elasticsearch.Password,
+			Transport: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: opts.Elasticsearch.SkipSSLVerify,
+				},
+			},
 		},
 	}
 	exporter.ConnectElasticsearch(cfg, opts.Elasticsearch.Index)

@@ -11,8 +11,7 @@ import (
 	"strings"
 	"time"
 
-	elasticsearch "github.com/elastic/go-elasticsearch/v7"
-	"github.com/elastic/go-elasticsearch/v7/esapi"
+	opensearchapi "github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
@@ -21,7 +20,7 @@ const supportedWebhookVersion = "4"
 
 type (
 	AlertmanagerElasticsearchExporter struct {
-		elasticSearchClient    *elasticsearch.Client
+		elasticSearchClient    *opensearchapi.Client
 		elasticsearchIndexName string
 
 		prometheus struct {
@@ -83,26 +82,29 @@ func (e *AlertmanagerElasticsearchExporter) Init() {
 	prometheus.MustRegister(e.prometheus.alertsSuccessful)
 }
 
-func (e *AlertmanagerElasticsearchExporter) ConnectElasticsearch(cfg elasticsearch.Config, indexName string) {
+func (e *AlertmanagerElasticsearchExporter) ConnectElasticsearch(cfg opensearchapi.Config, indexName string) {
 	var err error
-	e.elasticSearchClient, err = elasticsearch.NewClient(cfg)
+	e.elasticSearchClient, err = opensearchapi.NewClient(cfg)
 	if err != nil {
 		panic(err)
 	}
 
 	tries := 0
 	for {
-		_, err = e.elasticSearchClient.Info()
+		ctx := context.Background()
+		res, err := e.elasticSearchClient.Info(ctx, nil)
 		if err != nil {
 			tries++
 			if tries >= 5 {
 				panic(err)
 			} else {
+				log.Error(err)
 				log.Info("Failed to connect to ES, retry...")
 				time.Sleep(5 * time.Second)
 				continue
 			}
 		}
+		log.Infof("Connected to ES: %s", res.Version.Number)
 
 		break
 	}
@@ -161,12 +163,14 @@ func (e *AlertmanagerElasticsearchExporter) HttpHandler(w http.ResponseWriter, r
 	msg.Timestamp = now.Format(time.RFC3339)
 
 	incidentJson, _ := json.Marshal(msg)
-
-	req := esapi.IndexRequest{
-		Index: e.buildIndexName(now),
-		Body:  bytes.NewReader(incidentJson),
-	}
-	res, err := req.Do(context.Background(), e.elasticSearchClient)
+	res, err := e.elasticSearchClient.Index(
+		context.Background(),
+		opensearchapi.IndexReq{
+			Index: e.buildIndexName(now),
+			Body:  bytes.NewReader(incidentJson),
+		},
+	)
+	log.Debug(res.Result)
 	if err != nil {
 		e.prometheus.alertsInvalid.WithLabelValues().Inc()
 		err := fmt.Errorf("unable to insert document in elasticsearch")
@@ -174,7 +178,6 @@ func (e *AlertmanagerElasticsearchExporter) HttpHandler(w http.ResponseWriter, r
 		log.Error(err)
 		return
 	}
-	defer res.Body.Close()
 
 	log.Debugf("received and stored alert: %v", msg.CommonLabels)
 	e.prometheus.alertsSuccessful.WithLabelValues().Inc()
