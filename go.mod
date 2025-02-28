@@ -1,6 +1,8 @@
 module github.com/webdevops/alertmanager2es
 
-go 1.18
+go 1.21
+
+toolchain go1.23.5
 
 require (
 	github.com/elastic/go-elasticsearch/v7 v7.17.1
@@ -14,6 +16,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/opensearch-project/opensearch-go/v4 v4.4.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.34.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect

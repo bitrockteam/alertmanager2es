@@ -21,7 +21,6 @@ type (
 			Addresses     []string `long:"elasticsearch.address"      env:"ELASTICSEARCH_ADDRESS"  delim:" "  description:"ElasticSearch urls" required:"true"`
 			Username      string   `long:"elasticsearch.username"     env:"ELASTICSEARCH_USERNAME"            description:"ElasticSearch username for HTTP Basic Authentication"`
 			Password      string   `long:"elasticsearch.password"     env:"ELASTICSEARCH_PASSWORD"            description:"ElasticSearch password for HTTP Basic Authentication" json:"-"`
-			ApiKey        string   `long:"elasticsearch.apikey"       env:"ELASTICSEARCH_APIKEY"              description:"ElasticSearch base64-encoded token for authorization; if set, overrides username and password" json:"-"`
 			Index         string   `long:"elasticsearch.index"        env:"ELASTICSEARCH_INDEX"               description:"ElasticSearch index name (placeholders: %y for year, %m for month and %d for day)" default:"alertmanager-%y.%m"`
 			SkipSSLVerify bool     `long:"elasticsearch.skipSSLVerify"        env:"ELASTICSEARCH_SKIPSSLVERIFY"               description:"Skip SSL verification when connecting to ElasticSearch"`
 		}
