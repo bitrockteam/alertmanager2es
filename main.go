@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
@@ -46,6 +47,9 @@ func main() {
 		APIKey:    opts.Elasticsearch.ApiKey,
 		Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: opts.Elasticsearch.SkipSSLVerify,
+			},
 		},
 	}
 	exporter.ConnectElasticsearch(cfg, opts.Elasticsearch.Index)
